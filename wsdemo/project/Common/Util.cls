@@ -9,34 +9,48 @@ ClassMethod GetSiteInfo() As %List
 	Return $LISTBUILD("WSHQ","WSDC","WSDC2","MAKER")
 }
 
+/// generate WebService clients
+ClassMethod GenTaskClient(host = "localhost", port = "52773", namespace = "wsdemo", user = "appuser", pass = "sys") As %Status
+{
+	Set r=##class(%SOAP.WSDL.Reader).%New()
+
+	;Set r.ClientPackage="WSHQ.WC"
+	Set server="http://wshq:"_port_"/csp/wshq"
+	Set r.MakePersistent=1
+	Set url=server_"/WSHQ.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
+	Do r.Process(url)
+
+	;Set r.ClientPackage="MAKER.WC"
+	Set server="http://maker:"_port_"/csp/maker"
+	Set r.MakePersistent=1
+	Set url=server_"/MAKER.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
+	Do r.Process(url)
+
+	;Set r.ClientPackage="WSDC.WC"
+	Set server="http://wsdc1:"_port_"/csp/wsdc"
+	Set r.MakePersistent=1
+	Set url=server_"/WSDC.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
+	Do r.Process(url)
+
+	Return $$$OK
+}
+
+/// generate WebService clients
 ClassMethod GenAllClient(host = "localhost", port = "52773", namespace = "wsdemo", user = "appuser", pass = "sys") As %Status
 {
 	Set r=##class(%SOAP.WSDL.Reader).%New()
 	Set server="http://"_host_":"_port_"/csp/"_namespace
 
-	;Set r.ClientPackage="WSHQ.WC"
-	Set r.MakePersistent=1
-	Set url=server_"/WSHQ.Task.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
-
 	Set r.MakePersistent=1
 	Set url=server_"/WSHQ.Service.DC.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
 	Do r.Process(url)
-
-	;Set r.ClientPackage="MAKER.WC"
-	Set r.MakePersistent=1
-	Set url=server_"/MAKER.Task.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
 	
+	/*
 	;Set r.ClientPackage="MAKER.WC"
 	Set r.MakePersistent=1
 	Set url=server_"/MAKER.Service.HQ.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
 	Do r.Process(url)
-
-	;Set r.ClientPackage="WSDC.WC"
-	Set r.MakePersistent=1
-	Set url=server_"/WSDC.Task.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
+	*/
 
 	;Set r.ClientPackage="WSDC.WC"
 	Set r.MakePersistent=1
@@ -48,6 +62,7 @@ ClassMethod GenAllClient(host = "localhost", port = "52773", namespace = "wsdemo
 	Set url=server_"/WSDC.Service.Maker.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
 	Do r.Process(url)
 	
+	Do ..GenTaskClient(host, port, namespace, user, pass)
 	Return $$$OK
 }
 
@@ -88,7 +103,7 @@ ClassMethod IncrementToday()
 ClassMethod GetWSHQClient(host = "localhost", port = 52773) As %SOAP.WebClient
 {
 	Set wsClient=##class(WSHQ.WSHQSoap).%New()
-	Set wsClient.Location="http://"_host_":"_port_"/csp/wshq/WSHQ.Task.cls"
+	;Set wsClient.Location="http://"_host_":"_port_"/csp/wshq/WSHQ.Task.cls"
 	Set utoken=..GetUsernameToken()
 	Do wsClient.SecurityOut.AddSecurityElement(utoken)
 	Return wsClient
@@ -97,7 +112,7 @@ ClassMethod GetWSHQClient(host = "localhost", port = 52773) As %SOAP.WebClient
 ClassMethod GetWSDCClient(host = "localhost", port = 52773) As %SOAP.WebClient
 {
 	Set wsClient=##class(WSDC.WSDCSoap).%New()
-	Set wsClient.Location="http://"_host_":"_port_"/csp/wsdc/WSDC.Task.cls"
+	;Set wsClient.Location="http://"_host_":"_port_"/csp/wsdc/WSDC.Task.cls"
 	Set utoken=..GetUsernameToken()
 	Do wsClient.SecurityOut.AddSecurityElement(utoken)
 	Return wsClient
@@ -106,7 +121,7 @@ ClassMethod GetWSDCClient(host = "localhost", port = 52773) As %SOAP.WebClient
 ClassMethod GetMAKERClient(host = "localhost", port = 52773) As %SOAP.WebClient
 {
 	Set wsClient=##class(MAKER.MAKERSoap).%New()
-	Set wsClient.Location="http://"_host_":"_port_"/csp/maker/MAKER.Task.cls"
+	;Set wsClient.Location="http://"_host_":"_port_"/csp/maker/MAKER.Task.cls"
 	Set utoken=..GetUsernameToken()
 	Do wsClient.SecurityOut.AddSecurityElement(utoken)
 	Return wsClient
@@ -120,66 +135,85 @@ ClassMethod GetUsernameToken() As %SOAP.Security.UsernameToken
 	Return utoken
 }
 
-ClassMethod ClearAll(host = "localhost", port = 52773) As %Status
+ClassMethod ClearAll() As %Status
 {
-	#;念のため
-	Do ..StopAll()
-	
+	#; There is no production in WSDEMO server at the moment.	
 	#; purge Ensemble/Activity Voulme and Duration
+	/*
 	Set tSC=##class(Ens.Activity.Utils).Purge(0,"s",.c)
 	Set tSC=##class(Ens.Activity.Utils).Purge(0,"hh",.c)
 	Set tSC=##class(Ens.Activity.Utils).Purge(0,"d",.c)
+	*/
 	
 	#;ダミー日付を初期化
 	Do ##class(Common.Util).SetToday("2001-01-01")
 	
 	W "HQ環境のクリーンアップ",!
-	Set wsClient=##class(Common.Util).GetWSHQClient(host,port)
-	Do wsClient.ClearAll()
-	;Do ##class(WSHQ.Task).ClearAll()
+	Set wsClient=##class(Common.Util).GetWSHQClient()
+	Set tSC=wsClient.StopProduction()
+	Set tSC=wsClient.ClearAll()
 		
-	#;DC環境のクリーンアップ
 	W "WSDC1環境のクリーンアップ",!
-	Set wsClient=##class(Common.Util).GetWSDCClient(host,port)
-	Do wsClient.ClearAll()
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Set tSC=wsClient.StopProduction()
+	Set tSC=wsClient.ClearAll()
 
 	W "WSDC2環境のクリーンアップ",!
-	Set wsClient=##class(Common.Util).GetWSDCClient(host,port)
-	Set wsClient.Location="http://"_host_":"_port_"/csp/wsdc2/WSDC.Task.cls"
-	Do wsClient.ClearAll()
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Set wsClient.Location="http://wsdc2:52773/csp/wsdc/WSDC.Task.cls"
+	Set tSC=wsClient.StopProduction()
+	Set tSC=wsClient.ClearAll()
 
-	#;Maker環境のクリーンアップ
 	W "Maker環境のクリーンアップ",!
-	Set wsClient=##class(Common.Util).GetMAKERClient(host,port)
-	Do wsClient.ClearAll()
+	Set wsClient=##class(Common.Util).GetMAKERClient()
+	Set tSC=wsClient.StopProduction()
+	Set tSC=wsClient.ClearAll()
 
 	Return $$$OK
 }
 
-ClassMethod StartAll()
+ClassMethod StartAll() As %Status
 {
-	Set nsall=..GetSiteInfo()
+	W "HQ環境の開始",!
+	Set wsClient=##class(Common.Util).GetWSHQClient()
+	Set tSC=wsClient.StartProduction()
+		
+	W "WSDC1環境の開始",!
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Set tSC=wsClient.StartProduction()
 
-	New $namespace
-	For i=1:1:$LISTLENGTH(nsall)	 {
-		Set ns=$LIST(nsall,i)
-		Set $namespace=ns
-		If $E(ns,1,4)="WSHQ" Do ##class(Ens.Director).StartProduction("WSHQ.Production.Production1")
-		If $E(ns,1,4)="MAKE" Do ##class(Ens.Director).StartProduction("MAKER.Production.Production1")
-		If $E(ns,1,4)="WSDC" Do ##class(Ens.Director).StartProduction("WSDC.Production.Production1")
-	}
+	W "WSDC2環境の開始",!
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Set wsClient.Location="http://wsdc2:52773/csp/wsdc/WSDC.Task.cls"
+	Set tSC=wsClient.StartProduction()
+
+	W "Maker環境の開始",!
+	Set wsClient=##class(Common.Util).GetMAKERClient()
+	Set tSC=wsClient.StartProduction()
+
+	Return $$$OK
 }
 
-ClassMethod StopAll()
+ClassMethod StopAll() As %Status
 {
-	Set nsall=..GetSiteInfo()
+	W "HQ環境の停止",!
+	Set wsClient=##class(Common.Util).GetWSHQClient()
+	Do wsClient.StopProduction()
+		
+	W "WSDC1環境の停止",!
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Do wsClient.StopProduction()
 
-	New $namespace
-	For i=1:1:$LISTLENGTH(nsall)	 {
-		Set ns=$LIST(nsall,i)
-		Set $namespace=ns
-		Do ##class(Ens.Director).StopProduction(,1)
-	}
+	W "WSDC2環境の停止",!
+	Set wsClient=##class(Common.Util).GetWSDCClient()
+	Set wsClient.Location="http://wsdc2:52773/csp/wsdc/WSDC.Task.cls"
+	Do wsClient.StopProduction()
+
+	W "Maker環境の停止",!
+	Set wsClient=##class(Common.Util).GetMAKERClient()
+	Do wsClient.StopProduction()
+
+	Return $$$OK
 }
 
 ClassMethod AddEnsembleCredential() As %Status
@@ -188,49 +222,6 @@ ClassMethod AddEnsembleCredential() As %Status
 	Set tSC=##class(Ens.Config.Credentials).SetCredential("ensemble-email", "user1", "xxx")
 	
 	Return $$$OK
-}
-
-ClassMethod RemoveAll() As %Status
-{
-	#;以下、使用しているライブラリはいずれも将来的にはrest/apiに変更する。
-	#;自分自身を含むDB(WSDEMO)も削除するので、実行後は%SYSに残る。
-	Set tSC=$$$OK
-	Set nsall=..GetSiteInfo()_$LISTBUILD("WSDEMO")
-	Set $namespace="%SYS"
-
-	Try {
-		For i=1:1:$LISTLENGTH(nsall)	 {
-			Set ns=$LIST(nsall,i)
-			w ns,!
-			Set directory=$SYSTEM.Util.ManagerDirectory()_ns
-			Set webApp="/csp/"_ns
-
-			Set tSC = ##class(Config.Namespaces).Delete(ns)
-			If $SYSTEM.Status.GetErrorCodes(tSC)'=$$$CPFNameDoesNotExist {
-				If $$$ISERR(tSC) throw ##Class(%Exception.StatusException).CreateFromStatus(tSC)
-			}
-			
-			Set tSC = ##class(%Library.EnsembleMgr).DisableNamespace(ns)
-			If $$$ISERR(tSC) throw ##Class(%Exception.StatusException).CreateFromStatus(tSC)
-
-			Set tSC = ##Class(Security.Applications).Delete(webApp)
-			If $SYSTEM.Status.GetErrorCodes(tSC)'=$$$ApplicationDoesNotExist {
-				If $$$ISERR(tSC) throw ##Class(%Exception.StatusException).CreateFromStatus(tSC)
-			}
-			Set tSC = ##class(Config.Databases).Delete(ns)
-			If $SYSTEM.Status.GetErrorCodes(tSC)'=$$$CPFNameDoesNotExist {
-				If $$$ISERR(tSC) throw ##Class(%Exception.StatusException).CreateFromStatus(tSC)
-			}
-			Set tSC = ##class(SYS.Database).DeleteDatabase(directory)
-			If $SYSTEM.Status.GetErrorCodes(tSC)'=$$$DatabaseDoesNotExist {
-				If $$$ISERR(tSC) throw ##Class(%Exception.StatusException).CreateFromStatus(tSC)
-			}
-		}
-	}
-	Catch (e) {
-		zw e
-	}
-	Quit tSC
 }
 
 }
