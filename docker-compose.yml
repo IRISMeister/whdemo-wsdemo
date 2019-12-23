@@ -1,0 +1,11 @@
+version: '3.7'
+#
+# $PWD is mounted as a generic /ISC in the container which then has the 
+# /ISC/etc and eventually 
+#
+services:
+  wsdemo:
+    build:
+      context: ./wsdemo
+      args:
+        COMMIT_ID: ${COMMIT_ID}
