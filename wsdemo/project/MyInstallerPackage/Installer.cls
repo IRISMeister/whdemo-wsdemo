@@ -13,21 +13,20 @@ XData setup [ XMLNamespace = INSTALLER ]
       <Configuration>
         <Database Name="WSDEMO" Create="overwrite" Dir="${DataBaseDir}WSDEMO" InitialSize="1"/>
       </Configuration>
-		<Invoke Class="%SYSTEM.OBJ" Method="ImportDir">
-			<Arg Value="${SRCDIR}" />
-			<Arg Value="" />
-			<Arg Value="ck" />
-			<Arg Value=".e" />
-			<Arg Value="1" />
-		</Invoke>
+	<Invoke Class="%SYSTEM.OBJ" Method="ImportDir" CheckStatus="true">
+		<Arg Value="${SRCDIR}" />
+		<Arg Value="" />
+		<Arg Value="ck" />
+		<Arg Value=".e" />
+		<Arg Value="1" />
+	</Invoke>
 
-		<Invoke Class="Common.ProductMaster" Method="Populate" CheckStatus="1" Return="RetVal"> </Invoke>
-		<!-- instead of calling ClarlAll() -->
-		<Invoke Class="Common.Util" Method="SetToday" > 
-			<Arg Value="2001-01-01" />
-		</Invoke>
+	<Invoke Class="Common.ProductMaster" Method="Populate" CheckStatus="1" Return="RetVal"> </Invoke>
+	<!-- instead of calling ClarlAll() -->
+	<Invoke Class="Common.Util" Method="SetToday" > 
+		<Arg Value="2001-01-01" />
+	</Invoke>
 	</Namespace>
-
 </Manifest>
 }
 
@@ -46,7 +45,7 @@ ClassMethod setup(ByRef tVars) As %Status
 	    ;appuserアカウントのパスワード(値は任意)。WSDLクライアント作成、管理アラート閲覧時のログインの際に使用する。  
 		If '$D(tVars("appuserpwd")) { Set tVars("appuserpwd")="sys" }
 		If '$D(tVars("SRCDIR")) { Set tVars("SRCDIR")="/home/irisowner/src" }
-  	  	Set tSC=..setupMethod(.tVars)
+		$$$THROWONERROR(tSC,..setupMethod(.tVars))
 
 		Set oldns=$NAMESPACE
 		New $NAMESPACE   ; just in case
