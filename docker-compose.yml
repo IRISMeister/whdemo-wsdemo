@@ -5,6 +5,7 @@ version: '3.7'
 #
 services:
   wsdemo:
+    image: dpmeister/irisdemo:wsdemo
     build:
       context: ./wsdemo
       args:

@@ -13,9 +13,9 @@ Parameter SERVICENAME = "MAKER";
 /// This is the SOAP version supported by the service.
 Parameter SOAPVERSION = 1.1;
 
-Method ClearAll() [ Final, ProcedureBlock = 1, SoapBindingStyle = document, SoapBodyUse = literal, WebMethod ]
+Method ClearAll() As %xsd.base64Binary [ Final, ProcedureBlock = 1, SoapBindingStyle = document, SoapBodyUse = literal, WebMethod ]
 {
- Do (..WebMethod("ClearAll")).Invoke($this,"http://tempuri.org/MAKER.Task.ClearAll")
+ Quit ..WebMethod("ClearAll").Invoke($this,"http://tempuri.org/MAKER.Task.ClearAll")
 }
 
 Method StartProduction() As %xsd.base64Binary [ Final, ProcedureBlock = 1, SoapBindingStyle = document, SoapBodyUse = literal, WebMethod ]

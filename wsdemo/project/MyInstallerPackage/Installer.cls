@@ -16,13 +16,11 @@ XData setup [ XMLNamespace = INSTALLER ]
 		<Invoke Class="%SYSTEM.OBJ" Method="ImportDir">
 			<Arg Value="${SRCDIR}" />
 			<Arg Value="" />
-			<Arg Value="k" />
+			<Arg Value="ck" />
 			<Arg Value=".e" />
 			<Arg Value="1" />
 		</Invoke>
 
-        <!-- /multicompile fails if you ever restart iris after changing locale to jpxx -->
-		<Compile Class="Common.*" Flags="ck" IgnoreErrors="0"/>
 		<Invoke Class="Common.ProductMaster" Method="Populate" CheckStatus="1" Return="RetVal"> </Invoke>
 		<!-- instead of calling ClarlAll() -->
 		<Invoke Class="Common.Util" Method="SetToday" > 
@@ -59,6 +57,7 @@ ClassMethod setup(ByRef tVars) As %Status
 		Set props("MatchRoles")=":%All"
 		Set tSC = ##Class(Security.Applications).Modify("/csp/wsdemo",.props)
 
+		#; Enables ECP Server
 		Set tSC=##Class(Security.Services).Get("%Service_ECP",.Properties)
 		Set Properties("Enabled")=1
 		Set tSC=##Class(Security.Services).Modify("%Service_ECP",.Properties)

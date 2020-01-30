@@ -10,24 +10,24 @@ ClassMethod GetSiteInfo() As %List
 }
 
 /// generate WebService clients
-ClassMethod GenTaskClient(host = "localhost", port = "52773", namespace = "wsdemo", user = "appuser", pass = "sys") As %Status
+ClassMethod GenTaskClient(user = "appuser", pass = "sys") As %Status
 {
 	Set r=##class(%SOAP.WSDL.Reader).%New()
 
 	;Set r.ClientPackage="WSHQ.WC"
-	Set server="http://wshq:"_port_"/csp/wshq"
+	Set server="http://wshq:52773/csp/wshq"
 	Set r.MakePersistent=1
 	Set url=server_"/WSHQ.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
 	Do r.Process(url)
 
 	;Set r.ClientPackage="MAKER.WC"
-	Set server="http://maker:"_port_"/csp/maker"
+	Set server="http://maker:52773/csp/maker"
 	Set r.MakePersistent=1
 	Set url=server_"/MAKER.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
 	Do r.Process(url)
 
 	;Set r.ClientPackage="WSDC.WC"
-	Set server="http://wsdc1:"_port_"/csp/wsdc"
+	Set server="http://wsdc1:52773/csp/wsdc"
 	Set r.MakePersistent=1
 	Set url=server_"/WSDC.Task.CLS?WSDL=1&IRISUserName="_user_"&IRISPassword="_pass
 	Do r.Process(url)
@@ -36,33 +36,20 @@ ClassMethod GenTaskClient(host = "localhost", port = "52773", namespace = "wsdem
 }
 
 /// generate WebService clients
-ClassMethod GenAllClient(host = "localhost", port = "52773", namespace = "wsdemo", user = "appuser", pass = "sys") As %Status
+ClassMethod GenWSClient(user = "appuser", pass = "sys") As %Status
 {
 	Set r=##class(%SOAP.WSDL.Reader).%New()
-	Set server="http://"_host_":"_port_"/csp/"_namespace
-
-	Set r.MakePersistent=1
-	Set url=server_"/WSHQ.Service.DC.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
-	
-	/*
-	;Set r.ClientPackage="MAKER.WC"
-	Set r.MakePersistent=1
-	Set url=server_"/MAKER.Service.HQ.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
-	*/
-
-	;Set r.ClientPackage="WSDC.WC"
-	Set r.MakePersistent=1
-	Set url=server_"/WSDC.Service.HQ.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
-	Do r.Process(url)
-	
+		
+	#; Other services are re-written to REST/JSON based apis. Following is left on puropose.
+	#; You have to manually move generated classes (WSDC.Maker.WSDC.MakerSoap,WSDC.Maker.DeliveryNote,WSDC.Maker.DeliveryNoteContainer) to 
+	#; wsdc/project/WSDC/Maker/WSDC folder of whdemo-wsdc project.
+	Set server="http://wsdc1:52773/csp/wsdc"
 	;Set r.ClientPackage="WSDC.WC"
 	Set r.MakePersistent=1
 	Set url=server_"/WSDC.Service.Maker.CLS?WSDL=1&CacheUserName="_user_"&CachePassword="_pass
 	Do r.Process(url)
 	
-	Do ..GenTaskClient(host, port, namespace, user, pass)
+	Do ..GenTaskClient(user, pass)
 	Return $$$OK
 }
 
